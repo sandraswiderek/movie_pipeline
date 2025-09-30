@@ -1,0 +1,12 @@
+
+
+
+gcloud functions deploy gcsToBigQuery --gen2 --region=europe-central2 --runtime=python311 --source=./ingest_func --entry-point=ingest_revenues --trigger-event-filters="type=google.cloud.storage.object.v1.finalized" --trigger-event-filters="bucket=revenues-input1" --trigger-location=europe-central2 --memory=1GiB --timeout=300s --set-env-vars="PROJECT_ID=data-warehouse,LOCATION=EU,TEMP_BUCKET=my-trigger-bucket1,DEST_DATASET=ingest_data,DEST_TABLE=revenues-per-day-final"
+
+
+
+gcloud run jobs deploy job-quickstart  --source ./job --task-timeout=3600  --region europe-central2  --project=sandipraca --set-env-vars="PROJECT_ID=sandipraca,LOCATION=EU,DATASET=ingest,BASE_TABLE=revenuse-per-day-final1,ENRICHED_TABLE=movies-enriched-final1,OMDB_API_KEY=ce1a7e87,MAX_QUERIES=50"
+
+
+
+gcloud scheduler jobs create http quickstart-schedule --location europe-central2   --schedule="*/5 * * * *"   --uri="https://europe-central2-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/878484751482/jobs/job-quickstart:run"   --http-method POST  --oauth-service-account-email 878484751482-compute@developer.gserviceaccount.com
