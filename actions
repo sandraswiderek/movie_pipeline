@@ -10,3 +10,10 @@ gcloud run jobs deploy job-quickstart  --source ./job --task-timeout=3600  --reg
 
 
 gcloud scheduler jobs create http quickstart-schedule --location europe-central2   --schedule="*/5 * * * *"   --uri="https://europe-central2-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/878484751482/jobs/job-quickstart:run"   --http-method POST  --oauth-service-account-email 878484751482-compute@developer.gserviceaccount.com
+
+
+
+gcloud storage buckets create gs://state_bucket_sandi \
+  --project=data-warehouse-473119 \
+  --location=EU \
+  --uniform-bucket-level-access
