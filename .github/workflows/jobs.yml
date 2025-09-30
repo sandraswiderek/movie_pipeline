@@ -34,13 +34,13 @@ jobs:
         run: |
           gcloud functions deploy gcsToBigQuery \
           --gen2 \
-          --region=europe-central2 \
+          --region=${{ vars.GCP_REGION }} \
           --runtime=python311 \
           --source=./ingest_func \
           --entry-point=ingest_revenues \
           --trigger-event-filters="type=google.cloud.storage.object.v1.finalized" \
-          --trigger-event-filters="${{ vars.INPUT_BUCKET }}" \
-          --trigger-location=europe-central2 \
+          --trigger-event-filters="bucket=${{ vars.INPUT_BUCKET }}" \
+          --trigger-location=${{ vars.GCP_REGION }} \
           --memory=1GiB \
           --timeout=300s \
           --set-env-vars="PROJECT_ID=${{ env.GCP_PROJECT_ID }}" \
