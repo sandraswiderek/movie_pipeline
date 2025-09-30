@@ -32,6 +32,9 @@ gcloud services enable \
   artifactregistry.googleapis.com \
   cloudbuild.googleapis.com \
   logging.googleapis.com \
+  bigquery.googleapis.com \
+  bigquerystorage.googleapis.com \
+  bigqueryconnection.googleapis.com \
   --project "$PROJECT_ID"
 
 for role in \

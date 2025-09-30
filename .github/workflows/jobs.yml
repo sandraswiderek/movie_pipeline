@@ -7,7 +7,7 @@ on:
 
 
 jobs:
-  deploy-ingest-job:
+  deploy-ingest-function:
     runs-on: ubuntu-latest
 
     env:
@@ -43,13 +43,13 @@ jobs:
           --trigger-location=${{ vars.GCP_REGION }} \
           --memory=1GiB \
           --timeout=300s \
-          --set-env-vars="PROJECT_ID=${{ env.GCP_PROJECT_ID }}" \
+          --set-env-vars="PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" \
           --set-env-vars="LOCATION=${{ vars.GCP_LOCATION }}" \
           --set-env-vars="TEMP_BUCKET=${{ vars.STAGING_BUCKET }}" \
           --set-env-vars="DEST_DATASET=${{ vars.DATASET_ID }}" \
           --set-env-vars="DEST_TABLE=${{ vars.REVENUES_TABLE }}"
 
-  deploy-enrich-job:
+  deploy-enrichment-job:
     runs-on: ubuntu-latest
 
     env:
