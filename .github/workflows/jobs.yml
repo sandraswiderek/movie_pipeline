@@ -30,5 +30,21 @@ jobs:
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: List GCS buckets
-        run: gsutil ls -p "$GCP_PROJECT_ID"
+      - name: Deploy
+        run: |
+          gcloud functions deploy gcsToBigQuery \
+          --gen2 \
+          --region=europe-central2 \
+          --runtime=python311 \
+          --source=./ingest_func \
+          --entry-point=ingest_revenues \
+          --trigger-event-filters="type=google.cloud.storage.object.v1.finalized" \
+          --trigger-event-filters="${{ vars.INPUT_BUCKET }}" \
+          --trigger-location=europe-central2 \
+          --memory=1GiB \
+          --timeout=300s \
+          --set-env-vars="PROJECT_ID=${{ env.GCP_PROJECT_ID }}" \
+          --set-env-vars="LOCATION=${{ vars.GCP_LOCATION }}" \
+          --set-env-vars="TEMP_BUCKET=${{ vars.STAGING_BUCKET }}" \
+          --set-env-vars="DEST_DATASET=${{ vars.DATASET_ID }}" \
+          --set-env-vars="DEST_TABLE=${{ vars.REVENUES_TABLE }}"
