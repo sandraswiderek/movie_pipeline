@@ -15,12 +15,12 @@ jobs:
 
     env:
       GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
-      TF_VAR_project_id: ${{ var.GCP_PROJECT_ID }}
-      TF_VAR_region: ${{ var.GCP_REGION }}
-      TF_VAR_location: ${{ var.GCP_LOCATION }}
-      TF_VAR_input_bucket: ${{ var.INPUT_BUCKET }}
-      TF_VAR_staging_bucket: ${{ var.STAGING_BUCKET }}
-      TF_VAR_dataset_id: ${{ var.DATASET_ID }}
+      TF_VAR_project_id: ${{ vars.GCP_PROJECT_ID }}
+      TF_VAR_region: ${{ vars.GCP_REGION }}
+      TF_VAR_location: ${{ vars.GCP_LOCATION }}
+      TF_VAR_input_bucket: ${{ vars.INPUT_BUCKET }}
+      TF_VAR_staging_bucket: ${{ vars.STAGING_BUCKET }}
+      TF_VAR_dataset_id: ${{ vars.DATASET_ID }}
 
     steps:
       - name: Checkout
@@ -34,7 +34,7 @@ jobs:
       - name: Terraform Init
         run: |
           terraform init \
-            -backend-config="bucket=${{ var.TF_STATE_BUCKET }}"
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
 
       # - name: Terraform Format
       #   run: terraform fmt -check
