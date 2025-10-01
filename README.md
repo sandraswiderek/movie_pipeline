@@ -56,6 +56,10 @@ This pipeline is built on a serverless, event-driven architecture using Google C
 - Provides interactive dashboards with KPIs, revenue trends, and genre movies comparisons.
 
 --------
+## Terraform
+
+
+--------
 
 ## 🧩 Data Model
 The schema is a star model:
@@ -64,6 +68,9 @@ The schema is a star model:
 - ```dim_time```: calendar attributes (date, month, year).
 - ```dim_genre```: movie genres by id.
 - ```dim_genre_names```: movie genres by name.
+
+### Comment:
+Dimension ```dim_genre``` handled in SQL instead of  Python – it could have been generated stable ```genre_id``` directly in the preprocessing script and skipped ```dim_genre``` in the warehouse. That would remove one extra table. I chose to keep ```dim_genre``` for simplicity and avoid adding more logic to the ingestion code.
 
 ### ER diagram
 <img width="1513" height="586" alt="image" src="https://github.com/user-attachments/assets/e96586f4-9eb4-4664-8d63-f8c7ac211999" />
@@ -90,6 +97,7 @@ Example screenshot:
 
 ### Future Improvements
 - adding more dimensions such as ```dim_actors```, ```dim_director```, ```dim_language```, ```dim_country``` for deeper analytics
+
 
 
 
