@@ -1,6 +1,6 @@
 # Movie Pipeline
 
-This project builds a serverless data pipeline for movie box office analysis. It ingests movie revenue CSVs, enriches them with OMDb API metadata, models the data in BigQuery, and powers an interactive Power BI dashboard — all built on Google Cloud Platform ☁️.
+This project builds a serverless data pipeline for movie box office analysis. It ingests movie revenue CSVs and enriches them with OMDb API data. Then it models the data in BigQuery and powers an interactive Power BI dashboard.
 
 ### Technologies
 - 🗂️ Cloud Storage
@@ -20,7 +20,7 @@ Analyze movie box office performance by building a serverless pipeline.
 ----------
 
 ## 📊 Pipeline Flow
-```[CSV in Cloud Storage] → [Cloud Run (clean + hash)] → [BigQuery temp table] → [BigQuery main table] → [Cloud Run (OMDb enrichment)] → [movie details table] → [Dataform (joined + materialized views)] → [Power BI]```
+```[CSV in Cloud Storage] → [Cloud Run (clean + hash)] → [BigQuery staging table] → [BigQuery revenues table] → [Cloud Run (OMDb enrichment)] → [movie details table] → [Dataform (joined + materialized views)] → [Power BI]```
 
 ----------
 
@@ -32,18 +32,18 @@ This pipeline is built on a serverless, event-driven architecture using Google C
 ### Data Ingestion 📥
 - User uploads a CSV file to Cloud Storage.
 - This event triggers a Cloud Run Job to clean the file (quotes, semicolons), add a title hash, and save it into a processed bucket.
-- Data is loaded into a BigQuery temp table, validated, and merged into the main table.
+- Data is loaded into a BigQuery staging table, validated, and merged into the main table.
 
 ### Enrichment 🔑
 - A scheduled Cloud Run Job calls the OMDb API.
-- It checks which ```title_hash``` values from the main fact table don’t yet have metadata.
+- It checks which ```title_hash``` values from the main fact table that are not already enriched.
 - For those titles, it retrieves attributes (genre, director, actors, ratings, box office, etc.).
 - The results are stored in a separate movie details table in BigQuery.
 - ⚠️ No new movies are added – only titles that already exist in the CSV data are enriched.
 - 🔄 API Limit: the free OMDb API key allows only 1,000 queries per day, so the job processes up to 900 daily to stay under the limit.
 
 ### Modeling 🧩
-- Dataform creates a joined view between the fact table and the enrichment table.
+- Dataform creates a joined view between the revenues table and the movie details table.
 - From this, five materialized views are generated:
 ```fact_daily_revenue```
 ```dim_movie```
@@ -60,7 +60,7 @@ This pipeline is built on a serverless, event-driven architecture using Google C
 ## 🧩 Data Model
 The schema is a star model:
 - ```fact table```: daily revenues per movie per date.
-- ```dim_movie```: movie metadata from OMDb API (boxoffice, ratings, etc.).
+- ```dim_movie```: movie details from OMDb API (boxoffice, ratings, etc.).
 - ```dim_time```: calendar attributes (date, month, year).
 - ```dim_genre```: movie genres by id.
 - ```dim_genre_names```: movie genres by name.
@@ -88,4 +88,5 @@ The schema is a star model:
 
 ### Future Improvements
 - adding more dimensions such as ```dim_actors```, ```dim_director```, ```dim_language```, ```dim_country``` for deeper analytics
+
 
