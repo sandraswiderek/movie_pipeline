@@ -61,16 +61,11 @@ Infrastructure and deployment are automated.
 
 - Terraform
   - Manages Google Cloud Storage buckets for raw and processed CSVs.
-  - Creates BigQuery datasets for raw, enriched, and analytics tables.
-  - Ensures infrastructure is version-controlled, reproducible, and easy to deploy across environments.
+  - Creates BigQuery dataset.
 
 - GitHub Actions️
   - Runs Terraform in CI/CD pipelines for infrastructure provisioning.
-  - Applies changes on the main branch using a workflow with Google Cloud authentication.
-
-Benefits:
-- Continuous Delivery of infrastructure – changes are applied consistently via GitHub Actions.
-- Easy rollback – infrastructure is tied to Git history.
+  - Deploy new versions of CSV ingesting Cloud Function, enrichment Cloud Run Job and sets up automated schedule in Cloud Scheduler for enrichment job.
 
 --------
 
@@ -110,6 +105,7 @@ Example screenshot:
 
 ### Future Improvements
 - adding more dimensions such as ```dim_actors```, ```dim_director```, ```dim_language```, ```dim_country``` for deeper analytics
+
 
 
 
