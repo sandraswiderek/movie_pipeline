@@ -1,27 +1,19 @@
 PROJECT_ID=data-warehouse-473119
 PROJECT_NUM=542527165512
 REGION=europe-central2
-TF_STATE_BUCKET=state_bucket_sandi
+TF_STATE_BUCKET=terraform_data_warehouse_state_bucket
 CI_SA_NAME=github
-CI_SA=${CI_SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com
-RUNTIME_SA=${PROJECT_ID}@appspot.gserviceaccount.com 
+CI_SA="$CI_SA_NAME@$PROJECT_ID.iam.gserviceaccount.com"
+GCS_SA="service-$PROJECT_NUM@gs-project-accounts.iam.gserviceaccount.com"
 
-
-gcloud iam service-accounts create ${CI_SA} \
-  --display-name=${CI_SA}
-
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-  --member=${CI_SA} \
-  --role="roles/editor"
+# creates service account used during deployment of Cloud Run resources
+gcloud iam service-accounts create $CI_SA_NAME \
+  --display-name=$CI_SA
 
 gcloud iam service-accounts keys create ./github-key.json \
-  --iam-account=${CI_SA}
+  --iam-account=$CI_SA
 
-gcloud storage buckets create gs://${TF_STATE_BUCKET} \
-  --project=${PROJECT_ID} \
-  --location=${REGION} \
-  --uniform-bucket-level-access
-
+# enabled google cloud APIs
 gcloud services enable \
   cloudresourcemanager.googleapis.com \
   serviceusage.googleapis.com \
@@ -35,25 +27,35 @@ gcloud services enable \
   bigquery.googleapis.com \
   bigquerystorage.googleapis.com \
   bigqueryconnection.googleapis.com \
+  cloudscheduler.googleapis.com \
   --project "$PROJECT_ID"
 
+# assigns roles to previously created service account
 for role in \
+  roles/editor \
   roles/cloudfunctions.admin \
   roles/run.admin \
   roles/eventarc.admin \
-  roles/pubsub.admin \
+  roles/pubsub.publisher \
   roles/artifactregistry.writer
 do
-  gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-    --member="serviceAccount:${CI_SA}" --role="$role"
+  gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$CI_SA" \
+  --role="$role"
 done
 
-gcloud iam service-accounts add-iam-policy-binding "$RUNTIME_SA" \
-  --member="serviceAccount:${CI_SA}" \
-  --role="roles/iam.serviceAccountUser"
+# creates bucket for Terraform state
+gcloud storage buckets create gs://$TF_STATE_BUCKET \
+  --project=$PROJECT_ID \
+  --location=$REGION \
+  --uniform-bucket-level-access
 
+# create GCS identity if does not exists
+gcloud beta services identity create \
+  --service=storage.googleapis.com \
+  --project="$PROJECT_ID"
 
-
-gcloud projects add-iam-policy-binding ${PROJECT_ID} \
-  --member="serviceAccount:service-${PROJECT_NUM}@gs-project-accounts.iam.gserviceaccount.com" \
+# assign role to default GCS service account. It allows to publish events to Pub/Sub
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$GCS_SA" \
   --role="roles/pubsub.publisher"

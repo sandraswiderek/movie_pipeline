@@ -1,27 +1,23 @@
 
 from google.cloud.exceptions import NotFound
-import pandas as pd
-import hashlib
-from google.cloud import storage, bigquery
+from google.cloud import bigquery
 import requests
 import time
 import os
 import sys
 import json
 
-PROJECT_ID   = os.getenv("PROJECT_ID", "data-warehouse")
-LOCATION     =  os.getenv('LOCATION', "EU")
-BQ_DATASET   = os.getenv('DATASET', "ingest_data") 
-BQ_TABLE     = os.getenv('BASE_TABLE', "revenues-per-day-final") 
-BQ_TABLE_ENRICHED     = os.getenv('ENRICHED_TABLE', "movies-enriched-final")
-OMDB_API_KEY = os.getenv('OMDB_API_KEY', "ce1a7e87")
+PROJECT_ID   = os.getenv("PROJECT_ID")
+LOCATION     =  os.getenv('LOCATION')
+BQ_DATASET   = os.getenv('DATASET')
+BQ_TABLE     = os.getenv('BASE_TABLE')
+BQ_TABLE_ENRICHED     = os.getenv('ENRICHED_TABLE')
+OMDB_API_KEY = os.getenv('OMDB_API_KEY')
 SLEEP_BETWEEN_CALLS = 0.3
-MAX_QUERIES   = int(os.getenv("MAX_QUERIES", "10"))
+MAX_QUERIES   = int(os.getenv("MAX_QUERIES"))
 
 def job():
-    print("------- started aisndandas")
     #table_id to tabela z danymi z csv + hash, a enriched_table_id to same dane z api
-
     client = bigquery.Client(project=PROJECT_ID, location=LOCATION)
     table_id = f"{PROJECT_ID}.{BQ_DATASET}.{BQ_TABLE}"
     enriched_table_id = f"{PROJECT_ID}.{BQ_DATASET}.{BQ_TABLE_ENRICHED}"

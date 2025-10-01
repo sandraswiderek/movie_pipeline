@@ -1,7 +1,6 @@
 import pandas as pd
 import hashlib
 from google.cloud import storage, bigquery
-import json
 from cloudevents.http import CloudEvent
 import os
 import time 

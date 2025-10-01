@@ -5,6 +5,8 @@ on:
   push:
     branches: [ main ]
 
+env:
+  CRON: "*/5 * * * *"
 
 jobs:
   deploy-ingest-function:
@@ -32,7 +34,7 @@ jobs:
 
       - name: Deploy
         run: |
-          gcloud functions deploy gcsToBigQuery \
+          gcloud functions deploy ingest-function \
           --gen2 \
           --region=${{ vars.GCP_REGION }} \
           --runtime=python311 \
@@ -47,7 +49,8 @@ jobs:
           --set-env-vars="LOCATION=${{ vars.GCP_LOCATION }}" \
           --set-env-vars="TEMP_BUCKET=${{ vars.STAGING_BUCKET }}" \
           --set-env-vars="DEST_DATASET=${{ vars.DATASET_ID }}" \
-          --set-env-vars="DEST_TABLE=${{ vars.REVENUES_TABLE }}"
+          --set-env-vars="DEST_TABLE=${{ vars.REVENUES_TABLE }}" \
+          --service-account=github@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com
 
   deploy-enrichment-job:
     runs-on: ubuntu-latest
@@ -74,7 +77,7 @@ jobs:
 
       - name: Deploy
         run: |
-          gcloud run jobs deploy job-quickstart \
+          gcloud run jobs deploy enrichment-job \
           --source ./job \
           --task-timeout=3600  \
           --region ${{ vars.GCP_REGION }} \
@@ -85,4 +88,45 @@ jobs:
           --set-env-vars="BASE_TABLE=${{ vars.REVENUES_TABLE }}" \
           --set-env-vars="ENRICHED_TABLE=${{ vars.ENRICHED_TABLE }}" \
           --set-env-vars="OMDB_API_KEY=${{ secrets.OMDB_API_KEY }}" \
-          --set-env-vars="MAX_QUERIES=${{ vars.MAX_ENRICHMENT_QUERIES }}"
+          --set-env-vars="MAX_QUERIES=${{ vars.MAX_ENRICHMENT_QUERIES }}" \
+          --service-account=github@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+
+  schedule-enrichment-job:
+    runs-on: ubuntu-latest
+    needs: deploy-enrichment-job
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Auth with Service Account JSON
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          create_credentials_file: true
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy
+        run: |
+          gcloud scheduler jobs update http enrichment-job-schedule \
+            --location "${{ vars.GCP_REGION }}" \
+            --schedule "${{ env.CRON }}" \
+            --uri "https://${{ vars.GCP_REGION }}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${{ vars.PROJECT_NUM }}/jobs/enrichment-job:run" \
+            --http-method POST \
+            --oauth-service-account-email "${{ vars.PROJECT_NUM }}-compute@developer.gserviceaccount.com" \
+          ||
+          gcloud scheduler jobs create http enrichment-job-schedule \
+          --location ${{ vars.GCP_REGION }} \
+          --schedule="${{ env.CRON }}" \
+          --uri="https://${{ vars.GCP_REGION }}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${{ vars.PROJECT_NUM }}/jobs/enrichment-job:run" \
+          --http-method POST \
+          --oauth-service-account-email \
+          ${{ vars.PROJECT_NUM }}-compute@developer.gserviceaccount.com
