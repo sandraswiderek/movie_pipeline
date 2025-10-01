@@ -56,8 +56,21 @@ This pipeline is built on a serverless, event-driven architecture using Google C
 - Provides interactive dashboards with KPIs, revenue trends, and genre movies comparisons.
 
 --------
-## Terraform
+## ⚙️ Terraform & GitHub Actions
+Infrastructure and deployment are automated.
 
+- Terraform
+  - Manages Google Cloud Storage buckets for raw and processed CSVs.
+  - Creates BigQuery datasets for raw, enriched, and analytics tables.
+  - Ensures infrastructure is version-controlled, reproducible, and easy to deploy across environments.
+
+- GitHub Actions️
+  - Runs Terraform in CI/CD pipelines for infrastructure provisioning.
+  - Applies changes on the main branch using a workflow with Google Cloud authentication.
+
+Benefits:
+- Continuous Delivery of infrastructure – changes are applied consistently via GitHub Actions.
+- Easy rollback – infrastructure is tied to Git history.
 
 --------
 
@@ -97,6 +110,7 @@ Example screenshot:
 
 ### Future Improvements
 - adding more dimensions such as ```dim_actors```, ```dim_director```, ```dim_language```, ```dim_country``` for deeper analytics
+
 
 
 
