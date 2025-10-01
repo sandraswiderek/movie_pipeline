@@ -66,13 +66,15 @@ The schema is a star model:
 - ```dim_genre_names```: movie genres by name.
 
 ### ER diagram
-[screenshot]
+<img width="1513" height="586" alt="image" src="https://github.com/user-attachments/assets/e96586f4-9eb4-4664-8d63-f8c7ac211999" />
+
 
 --------
 
 ## Dashboard Demo
-
-[screenshot]
+### Power BI Dashboard (click to see): [XXX]
+Example screenshot:
+<img width="1221" height="693" alt="image" src="https://github.com/user-attachments/assets/323ea341-0920-41f0-a2de-2322aecab541" />
 
 -------
 
@@ -88,5 +90,6 @@ The schema is a star model:
 
 ### Future Improvements
 - adding more dimensions such as ```dim_actors```, ```dim_director```, ```dim_language```, ```dim_country``` for deeper analytics
+
 
 
