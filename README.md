@@ -58,7 +58,7 @@ Ideally solution would be to combine those two approaches:
 
 __Comments__: 
 1) There is a view built on top of another view. That’s acceptable here given the small data volume, but for larger datasets a materialized view would deliver better performance. 
-2) Tables ```revenues_per_day``` and ```movies_enriched``` are join together using INNER JOIN. It could have been handled by LEFT JOIN (```revenues_per_day``` table as a left table). I chose to use an INNER JOIN to keep the analysis consistent. With a LEFT JOIN, all movies, including those without any enriched data, would appear in the dashboard and distort the aggregations. By using an INNER JOIN that are not yet enriched with data do not end up in the dashboard yet. 
+2) Tables ```revenues_per_day``` and ```movies_enriched``` are join together using INNER JOIN. It could have been handled by LEFT JOIN (`revenues_per_day` table as a left table). I chose to use an INNER JOIN to keep the analysis consistent. With a LEFT JOIN all movies, including those without any enriched data, would appear in the dashboard and disturb the aggregations. By using an INNER JOIN, movies that are not yet enriched with data do not end up in the dashboard yet. 
 
 ### Analytics & Dashboard 📊
 - Power BI connects to the BigQuery.
@@ -76,20 +76,20 @@ Infrastructure and deployment are automated.
   - Runs Terraform in CI/CD pipelines.
   - Deploy new versions of CSV ingesting Cloud Function, enrichment Cloud Run Job and sets up automated schedule in Cloud Scheduler for enrichment job.
 
-- ```init.bash```: initializes the service account used later in GitHub Actions.It enables the required APIs, grants the necessary permissions, and creates a bucket for Terraform state.
+- ```init.bash```: initializes the service account used as actor in GitHub Actions. It enables the required APIs, grants the necessary permissions, and creates a bucket for Terraform state.
 
 --------
 
 ## 🧩 Data Model
 The schema is a star model:
-- ```fact table```: daily revenues per movie per date.
+- ```facts_table```: daily revenues per movie per date.
 - ```dim_movie```: movie details from OMDb API (boxoffice, ratings, etc.).
 - ```dim_time```: calendar attributes (date, month, year).
 - ```dim_genre```: movie genres by id.
 - ```dim_genre_names```: movie genres by name.
 
-### Comment:
-The column ```genre_id``` in ```dim_genre``` ccontains hash values generated directly in SQL. ```genre_id``` could have been assigned in a Python script as stable IDs (e.g., the "Action" genre always having ```id=2```. I chose to do it by hash to show that i understand the concept and also to avoid adding more logic to the ingestion code.
+__Comments__:
+The column ```genre_id``` in ```dim_genre``` contains hash values generated directly in SQL based on name of genre. ```genre_id``` should have been assigned in a Python script as stable IDs (e.g., the "action" genre always having ```id=2```. I chose to do it by hash to show that i understand the concept and also to avoid adding more logic to the ingestion code.
 
 ### ER diagram
 <img width="1617" height="607" alt="image" src="https://github.com/user-attachments/assets/57c1e4bb-fe3f-4279-9912-470c783f2891" />
@@ -117,6 +117,7 @@ Example screenshot:
 
 ### Future Improvements
 - adding more dimensions such as ```dim_actors```, ```dim_director```, ```dim_language```, ```dim_country``` for deeper analytics
+
 
 
 
