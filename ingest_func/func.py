@@ -21,16 +21,16 @@ def fix_line(line: str) -> str:
     if line[0] == "\"" and line[-1] == "\"": line = line[1:-1]
     return line + "\n"
 
-def triggering_bucket(event: CloudEvent):
+def run_ingest(event: CloudEvent):
     """
-    Runs when a file appears in GCS.
+    Runs when a file is uploaded to GCS.
     Steps:
-    1) Download CSV.
-    2) Clean it and add `title_hash`.
-    3) Upload cleaned file to a temp bucket.
-    4) Load to BigQuery.
-       - First time: load straight to target table.
-       - Next times: load to staging and MERGE into target.
+    1. Download CSV.
+    2. Clean it and add `title_hash`.
+    3. Upload cleaned file to a staging bucket.
+    4. Load to BigQuery.
+       - First time: load directly to target table.
+       - Next times: load to staging and MERGE into target - avoid duplicated revenue rows.
     """
     data = event.data
     print(event)
@@ -111,7 +111,7 @@ def triggering_bucket(event: CloudEvent):
         return
 
 
-    # Merge new rows into target (insert only; add UPDATE if needed)
+    # Merge new rows into target
     merge_sql = f"""
     MERGE `{tgt_id}` T
     USING (

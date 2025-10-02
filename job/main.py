@@ -22,7 +22,7 @@ def job():
     table_id = f"{PROJECT_ID}.{BQ_DATASET}.{BQ_TABLE}"
     enriched_table_id = f"{PROJECT_ID}.{BQ_DATASET}.{BQ_TABLE_ENRICHED}"
 
-    # Ensure the enriched table exists (create once with a simple schema)
+    # Ensure the enriched table exists, create it if it does not
     try:
         client.get_table(enriched_table_id)
     except NotFound:
@@ -42,7 +42,8 @@ def job():
         ]
         client.create_table(bigquery.Table(enriched_table_id, schema=schema))
 
-    # Pick titles that are not yet present in the enriched table. Randomize (sample) so we don’t always hit the same titles first.
+    # Select titles that are not yet present in the enriched table. Randomize (sample) so we don’t always hit the same titles first.
+    # The titles sample is randomised in Cloud Function but order randomization might be done by BigQuery as well - probably better approach long-term.
     to_process = client.query_and_wait(f"""
         SELECT DISTINCT title_hash, title
         FROM `{table_id}`
@@ -56,6 +57,9 @@ def job():
 
     
     n = 0
+    # OMDb API is called at most MAX_QUERIES times. 
+    # The better approach (but more complicated) might be to additionally add API limit exceeding detection -
+    # in this case loop would be able to exit sooner without overflowing API with unnecessary requests.
     for row in to_process.itertuples(index=False):
         if n >= MAX_QUERIES:
             break
@@ -78,7 +82,7 @@ def job():
             continue
     
 
-    # Normalize keys to lowercase, expand ratings into flat columns
+        # Normalize keys to lowercase, expand ratings into flat columns
         data = { (k.lower() if isinstance(k, str) else k): v for k, v in data.items() }
         for idx, item in enumerate(data["ratings"], start=1):
             src = item.get("Source")
@@ -105,4 +109,4 @@ if __name__ == "__main__":
         )
 
         print(json.dumps({"message": message, "severity": "ERROR"}))
-        sys.exit(1)  # Retry Job Task by exiting the process
+        sys.exit(1)
