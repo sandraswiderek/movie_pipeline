@@ -17,12 +17,12 @@ SLEEP_BETWEEN_CALLS = 0.3
 MAX_QUERIES   = int(os.getenv("MAX_QUERIES"))
 
 def job():
-    #table_id to tabela z danymi z csv + hash, a enriched_table_id to same dane z api
+    """Read titles that are not yet enriched, call the OMDb API, and insert enriched rows into BigQuery."""
     client = bigquery.Client(project=PROJECT_ID, location=LOCATION)
     table_id = f"{PROJECT_ID}.{BQ_DATASET}.{BQ_TABLE}"
     enriched_table_id = f"{PROJECT_ID}.{BQ_DATASET}.{BQ_TABLE_ENRICHED}"
 
-    #bierzemy tabelę enriched, no chyba, że jej nie ma to ją tworzymy
+    # Ensure the enriched table exists (create once with a simple schema)
     try:
         client.get_table(enriched_table_id)
     except NotFound:
@@ -42,8 +42,7 @@ def job():
         ]
         client.create_table(bigquery.Table(enriched_table_id, schema=schema))
 
-    #te rows które nie zostały jeszcze przeprocesowane dodajemy do dataframe, 'sample' bo brane title i title_hash muszą być losowe, 
-    # bo za każdym razem gdybysmy odpalali query to pierwsze rows ciągle byłyby te same i ciągle by się nawarstwiały na początku
+    # Pick titles that are not yet present in the enriched table. Randomize (sample) so we don’t always hit the same titles first.
     to_process = client.query_and_wait(f"""
         SELECT DISTINCT title_hash, title
         FROM `{table_id}`
@@ -52,10 +51,10 @@ def job():
         FROM `{enriched_table_id}`;
     """).to_dataframe().sample(frac=1)
 
-    #ile jeszcze tytułów trzeba przeprocesować
+    
     print(f"movies to process: {len(to_process.index)}")
 
-    #pętla procesowania rows, funckja sleep aby chociaz lekko opoznic pomiędzy zapytaniami, zeby za szybko sie nie robiło
+    
     n = 0
     for row in to_process.itertuples(index=False):
         if n >= MAX_QUERIES:
@@ -65,9 +64,8 @@ def job():
         title_hash = row.title_hash
         title = row.title
 
-    #robie zapytanie do api, w ciagu 15 sekund mam otrzymac inf zwrotną jak nie dostane to sie przerywa i leci z kolejnym row; 
-    # raise_for stat - jezeli otrzymam status z bledem np 500 to dostane błąd; jezeli dostane error to zwroci mi np: {"Response":"False","Error":"Movie not found!"}
-    # i leci z kolejnym row
+
+        # Call OMDb
         try:
             r = requests.get("https://www.omdbapi.com/", params={"apikey": OMDB_API_KEY, "t": title, "plot": "short"}, timeout=15)
             r.raise_for_status()
@@ -78,10 +76,9 @@ def job():
         except Exception as e:
             print(f"failed to get data for movie {title}: {e}")
             continue
-    # jezeli bedzie error ogolnie z innego powodu w try, to dostane exception i wypisze mi ten błąd ('e')
+    
 
-    #jeżeli key jest stringiem, konwerujemy na małe litery, w przeciwnym razie zostawiamy, w ratings są zagnieżdzone dane bo są w dict, definiuje się nazwę
-    # skąd jest rating i jego value, source zamieniamy na nazwe aby wiedziec skad rating poprzez 'rating_' + nazwa source bez spacji i bez -, z małych liter
+    # Normalize keys to lowercase, expand ratings into flat columns
         data = { (k.lower() if isinstance(k, str) else k): v for k, v in data.items() }
         for idx, item in enumerate(data["ratings"], start=1):
             src = item.get("Source")
@@ -89,10 +86,11 @@ def job():
             if src:
                 data[f"ratings_{src.replace(' ', '').replace('-', '').lower()}"] = val
 
-    #o co chodzi w zip? enriched czyli łączyli title+title_hash z columnami z api, wysyłane jest zapytanie do bq - jezeli dodane dane do enriched table są w 
-    # np. złym formacie to dostajemy komunikat
+    
         row_dict = {c.lower(): v for c, v in zip(to_process.columns, row)}
         enriched = {**row_dict, **data}
+        
+        # Insert into BigQuery
         errors = client.insert_rows_json(enriched_table_id, [enriched], skip_invalid_rows=False, ignore_unknown_values=True)
         if errors:
             print(f"failed to insert enriched data for movie {title}: {errors}")
