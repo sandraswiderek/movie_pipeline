@@ -19,8 +19,8 @@ Analyze movie box office performance by building a serverless pipeline.
 
 ----------
 
-## 📊 Pipeline Flow
-```[CSV in Cloud Storage] → [Cloud Run (clean + hash)] → [BigQuery staging table] → [BigQuery revenues table] → [Cloud Run (OMDb enrichment)] → [movie details table] → [Dataform (joined + materialized views)] → [Power BI]```
+## 📊 Pipeline Flow High-Level Overview
+```[upload CSV to Cloud Storage] → [Cloud Function (csv fix + staging bucket upload)] → [BigQuery staging table] → [BigQuery revenues table] → [Cloud Run (OMDb enrichment)] → [movie details table] → [Dataform (joined + materialized views)] → [Power BI]```
 
 ----------
 
@@ -36,13 +36,16 @@ This pipeline is built on a serverless, event-driven architecture using Google C
 
 ### Enrichment 🔑
 - A scheduled Cloud Run Job calls the OMDb API.
-- It checks which ```title_hash``` values from the main fact table that are not already enriched.
+- It checks which movies have not been enriched yet and builds titles list.
 - For those titles, it retrieves attributes (ratings, box office, etc.).
 - The results are stored in a separate ```movies_enriched``` table in BigQuery.
-- ⚠️ No new movies are added – only titles that already exist in the CSV data are enriched.
+- ⚠️ Each unique movie defined in revenues table is enriched only once.
 - 🔄 API Limit: the free OMDb API key allows only 1,000 queries per day, so the job processes up to 900 daily to stay under the limit.
 
-Comment: Execute a fixed number of requests based on an environment variable. A better approach would be to read API responses to detect how many requests have been used. For simplicity I did not implement that. Ideally is to combine two approaches.
+__Comment__: The job executes a fixed number of requests based on an environment variable. A better approach would be to read API responses to detect when request limit is reached. For simplicity I did not implement that. 
+Ideally solution would be to combine those two approaches:
+- detection of exceeding request limit allows to finish job ealier to not overflow API with unnecessary requests
+- fixed upper limit of requests prevent job from sending requests indefinetely when limit detection fails due to e.g. changes in the API responses
 
 ### Modeling 🧩
 - Dataform creates a joined view between the revenues table and the movie details table.
@@ -53,7 +56,7 @@ Comment: Execute a fixed number of requests based on an environment variable. A 
 ```dim_genre```
 ```dim_genre_name```.
 
-Comment: There is a view built on top of another view. That’s acceptable here given the small data volume, but for larger datasets a materialized view would deliver better performance.
+__Comment__: There is a view built on top of another view. That’s acceptable here given the small data volume, but for larger datasets a materialized view would deliver better performance. 
 
 
 ### Analytics & Dashboard 📊
@@ -113,6 +116,7 @@ Example screenshot:
 
 ### Future Improvements
 - adding more dimensions such as ```dim_actors```, ```dim_director```, ```dim_language```, ```dim_country``` for deeper analytics
+
 
 
 
