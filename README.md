@@ -56,8 +56,9 @@ Ideally solution would be to combine those two approaches:
 ```dim_genre```
 ```dim_genre_name```.
 
-__Comment__: There is a view built on top of another view. That’s acceptable here given the small data volume, but for larger datasets a materialized view would deliver better performance. 
-
+__Comments__: 
+1) There is a view built on top of another view. That’s acceptable here given the small data volume, but for larger datasets a materialized view would deliver better performance. 
+2) Tables ```revenues_per_day``` and ```movies_enriched``` are join together using INNER JOIN. It could have been handled by LEFT JOIN (```revenues_per_day``` table as a left table). I chose to use an INNER JOIN to keep the analysis consistent. With a LEFT JOIN, all movies, including those without any enriched data, would appear in the dashboard and distort the aggregations. By using an INNER JOIN that are not yet enriched with data do not end up in the dashboard yet. 
 
 ### Analytics & Dashboard 📊
 - Power BI connects to the BigQuery.
@@ -88,7 +89,7 @@ The schema is a star model:
 - ```dim_genre_names```: movie genres by name.
 
 ### Comment:
-The dimension ```dim_genre``` is handled in SQL instead of Python. It could have been generated stable ```genre_id``` directly in the preprocessing script and skipped ```dim_genre``` in the warehouse. That would remove one extra table. I chose to keep ```dim_genre``` for simplicity and avoid adding more logic to the ingestion code.
+The column ```genre_id``` in ```dim_genre``` ccontains hash values generated directly in SQL. ```genre_id``` could have been assigned in a Python script as stable IDs (e.g., the "Action" genre always having ```id=2```. I chose to do it by hash to show that i understand the concept and also to avoid adding more logic to the ingestion code.
 
 ### ER diagram
 <img width="1617" height="607" alt="image" src="https://github.com/user-attachments/assets/57c1e4bb-fe3f-4279-9912-470c783f2891" />
@@ -104,7 +105,7 @@ Example screenshot:
 
 -------
 
-## Other possible methods
+## Other possible architecture choices
 - Cloud Function instead of Cloud Run – simpler and cheaper, but only good for very small tasks. Cloud Run fits better here.
 - Dataflow instead of Cloud Run – powerful for large or streaming pipelines, but overkill for small CSV batches. Cloud Run is lighter and cheaper.
 - Cloud Composer instead of Scheduler – great for complex workflows, but too heavy and costly. Scheduler is enough for a two-job pipeline.
@@ -116,6 +117,7 @@ Example screenshot:
 
 ### Future Improvements
 - adding more dimensions such as ```dim_actors```, ```dim_director```, ```dim_language```, ```dim_country``` for deeper analytics
+
 
 
 
