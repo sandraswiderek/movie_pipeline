@@ -48,7 +48,7 @@ Ideally solution would be to combine those two approaches:
 - fixed upper limit of requests prevent job from sending requests indefinetely when limit detection fails due to e.g. changes in the API responses
 
 ### Modeling 🧩
-- Dataform creates a joined view between the revenues table and the movie details table.
+- Dataform creates a joined view (```combined_view```) between the revenues table and the movie details table.
 - From this, five other views are generated:
 ```fact_daily_revenue```
 ```dim_movie```
@@ -57,8 +57,9 @@ Ideally solution would be to combine those two approaches:
 ```dim_genre_name```.
 
 __Comments__: 
-1) There is a view built on top of another view. That’s acceptable here given the small data volume, but for larger datasets a materialized view would deliver better performance. 
-2) Tables ```revenues_per_day``` and ```movies_enriched``` are join together using INNER JOIN. It could have been handled by LEFT JOIN (`revenues_per_day` table as a left table). I chose to use an INNER JOIN to keep the analysis consistent. With a LEFT JOIN all movies, including those without any enriched data, would appear in the dashboard and disturb the aggregations. By using an INNER JOIN, movies that are not yet enriched with data do not end up in the dashboard yet. 
+1) Dataform SQL code transforms data types while creating ```combined_view```. Data transformations could have been handled in Python directly. I chose SQL, because transformations there are more simple.
+2) Tables ```revenues_per_day``` and ```movies_enriched``` are join together using INNER JOIN. It could have been handled by LEFT JOIN (`revenues_per_day` as a left table). I chose to use an INNER JOIN to keep the analysis consistent. With a LEFT JOIN all movies (including those without any enriched data) would appear in the dashboard and disturb the aggregations. By using an INNER JOIN, movies that are not yet enriched with data do not end up in the dashboard yet.
+3) There is a view built on top of another view. That’s acceptable here given the small data volume, but for larger datasets a materialized view would deliver better performance. 
 
 ### Analytics & Dashboard 📊
 - Power BI connects to the BigQuery.
@@ -92,7 +93,7 @@ __Comments__:
 The column ```genre_id``` in ```dim_genre``` contains hash values generated directly in SQL based on name of genre. ```genre_id``` should have been assigned in a Python script as stable IDs (e.g., the "action" genre always having ```id=2```. I chose to do it by hash to show that i understand the concept and also to avoid adding more logic to the ingestion code.
 
 ### ER diagram
-<img width="1617" height="607" alt="image" src="https://github.com/user-attachments/assets/57c1e4bb-fe3f-4279-9912-470c783f2891" />
+<img width="1612" height="608" alt="image" src="https://github.com/user-attachments/assets/77907512-8679-4701-a7df-80ff4c1d2d1e" />
 
 
 --------
@@ -110,21 +111,13 @@ Example screenshot:
 - Dataflow instead of Cloud Run – powerful for large or streaming pipelines, but overkill for small CSV batches. Cloud Run is lighter and cheaper.
 - Cloud Composer instead of Scheduler – great for complex workflows, but too heavy and costly. Scheduler is enough for a two-job pipeline.
 - dbt instead of Dataform – big ecosystem and testing features, but requires extra setup. Dataform is native in BigQuery and easier to use.
-- Python transforms instead of BigQuery (ELT) – flexible but harder to maintain. BigQuery SQL transformations are scalable and simple.
 - Looker Studio instead of Power BI – free and native to GCP, but the free version is limited in complex visuals. Power BI offers richer, more advanced visualizations.
 
 ---------
 
 ### Future Improvements
-- adding more dimensions such as ```dim_actors```, ```dim_director```, ```dim_language```, ```dim_country``` for deeper analytics
-
-
-
-
-
-
-
-
-
+- adding more dimensions such as ```dim_actors```, ```dim_director```, ```dim_language```, ```dim_country``` for deeper analytics.
+- stream CSV processing for large files (if possible in GCS).
+- introduce stable IDs for objects in many to many relationships in ```dim_movies``` (for example movies with multiple genres).
 
 
