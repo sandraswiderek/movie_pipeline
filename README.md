@@ -81,7 +81,7 @@ The schema is a star model:
 Dimension ```dim_genre``` handled in SQL instead of  Python – it could have been generated stable ```genre_id``` directly in the preprocessing script and skipped ```dim_genre``` in the warehouse. That would remove one extra table. I chose to keep ```dim_genre``` for simplicity and avoid adding more logic to the ingestion code.
 
 ### ER diagram
-<img width="1513" height="586" alt="image" src="https://github.com/user-attachments/assets/e96586f4-9eb4-4664-8d63-f8c7ac211999" />
+<img width="1617" height="607" alt="image" src="https://github.com/user-attachments/assets/57c1e4bb-fe3f-4279-9912-470c783f2891" />
 
 
 --------
@@ -105,6 +105,7 @@ Example screenshot:
 
 ### Future Improvements
 - adding more dimensions such as ```dim_actors```, ```dim_director```, ```dim_language```, ```dim_country``` for deeper analytics
+
 
 
 
