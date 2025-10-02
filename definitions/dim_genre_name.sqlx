@@ -1,0 +1,18 @@
+config {
+    type: "view"
+}
+
+WITH cv_genres AS (
+  SELECT
+    cv.title_hash,
+    LOWER(TRIM(g)) AS genre_name,
+  FROM ${ref("combined_view")} AS cv
+  CROSS JOIN UNNEST(SPLIT(cv.genre, ',')) AS g
+  WHERE g IS NOT NULL AND TRIM(g) <> ''
+)
+SELECT
+  dg.genre_id,
+  cg.genre_name
+FROM ${ref("dim_genre")} AS dg
+JOIN cv_genres AS cg
+  ON dg.title_hash = cg.title_hash

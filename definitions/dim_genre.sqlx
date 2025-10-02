@@ -1,0 +1,13 @@
+config {
+    type: "view"
+}
+
+SELECT
+  title_hash,
+  FARM_FINGERPRINT(LOWER(TRIM(genre))) & 9223372036854775807 AS genre_id
+FROM ${ref("combined_view")} AS cv,
+UNNEST(SPLIT(cv.genre, ',')) AS genre
+WHERE genre IS NOT NULL
+  AND TRIM(genre) <> ''
+
+  

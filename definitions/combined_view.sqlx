@@ -1,0 +1,28 @@
+config {
+    type: "view"
+}
+
+SELECT
+  rd.id,
+  rd.date,
+  rd.title,
+  rd.revenue,
+  rd.theaters,
+  rd.distributor,
+  rd.title_hash,
+  m.genre,
+  m.director,
+  m.actors,
+  m.writer,
+  m.country,
+  m.language,
+  SAFE_CAST(REPLACE(REPLACE(NULLIF(TRIM(m.boxoffice), 'N/A'), '$', ''), ',', '') AS INT64) AS boxoffice,
+  SAFE_CAST(TRIM(SPLIT(m.ratings_internetmoviedatabase, '/')[SAFE_OFFSET(0)]) AS FLOAT64) AS ratings_internetmoviedatabase,
+  SAFE_CAST(REPLACE(TRIM(m.ratings_rottentomatoes), '%', '') AS FLOAT64) / 10 AS ratings_rottentomatoes,
+  SAFE_CAST(TRIM(SPLIT(m.ratings_metacritic, '/')[SAFE_OFFSET(0)]) AS FLOAT64) / 10 AS ratings_metacritic
+FROM
+  `data-warehouse-473119.dataset_ingest.revenues_per_day` AS rd
+INNER JOIN
+  `data-warehouse-473119.dataset_ingest.movies_enriched` AS m
+ON
+  m.title_hash = rd.title_hash
