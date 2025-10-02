@@ -116,9 +116,10 @@ Example screenshot:
 ---------
 
 ### Future Improvements
-- adding more dimensions such as ```dim_actors```, ```dim_director```, ```dim_language```, ```dim_country``` for deeper analytics.
-- stream CSV processing for large files (if possible in GCS).
-- introduce stable IDs for objects in many to many relationships in ```dim_movies``` (for example movies with multiple genres).
+- More dimensions such as ```dim_actors```, ```dim_director```, ```dim_language```, ```dim_country``` for deeper analytics.
+- Stream CSV processing for large files (if possible in GCS).
+- Introduce stable IDs for objects in many to many relationships in ```dim_movies``` (for example movies with multiple genres).
+
 
 
 
