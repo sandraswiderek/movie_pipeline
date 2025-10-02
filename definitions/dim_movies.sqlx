@@ -1,0 +1,13 @@
+config {
+    type: "view"
+}
+
+SELECT
+  DISTINCT title_hash,
+  title,
+  boxoffice,
+  ratings_internetmoviedatabase,
+  ratings_rottentomatoes,
+  ratings_metacritic
+FROM
+  ${ref("combined_view")}

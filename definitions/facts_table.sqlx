@@ -1,0 +1,13 @@
+config {
+    type: "view"
+}
+
+SELECT
+  id, 
+  title_hash, 
+  date, 
+  revenue, 
+  theaters
+
+FROM
+  ${ref("combined_view")}
