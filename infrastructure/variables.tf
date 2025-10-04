@@ -24,8 +24,3 @@ variable "dataset_id" {
   type        = string
 }
 
-variable "credentials_json" {
-  type        = string
-  default     = ""
-  sensitive   = true
-}
