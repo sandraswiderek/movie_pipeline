@@ -102,7 +102,8 @@ The column ```genre_id``` in ```dim_genre``` contains hash values generated dire
 ### Power BI Dashboard (click to see): [![Live Dashboard](https://img.shields.io/badge/Live%20Dashboard-Open-brightgreen)](https://app.powerbi.com/view?r=eyJrIjoiZjgwYjkzYWMtNjgyYS00YjI4LTlmYzEtMzE4YWIwZGQ5ZDA2IiwidCI6ImJhYmFmMzMzLTA5NjQtNGJhYy05ZjNjLWE1NjBjMDNiZTU4MiJ9)
 
 Example screenshot:
-<img width="1227" height="687" alt="image" src="https://github.com/user-attachments/assets/1e57980e-1acb-4380-bccb-5b90c7ce9db8" />
+<img width="1002" height="832" alt="image" src="https://github.com/user-attachments/assets/014e2caa-6eb1-41a2-9dc5-df51b44fd9d9" />
+
 
 -------
 
@@ -119,6 +120,7 @@ Example screenshot:
 - More dimensions such as ```dim_actors```, ```dim_director```, ```dim_language```, ```dim_country``` for deeper analytics.
 - Stream CSV processing for large files (if possible in GCS).
 - Introduce stable IDs for objects in many to many relationships in ```dim_movies``` (for example movies with multiple genres).
+
 
 
 
