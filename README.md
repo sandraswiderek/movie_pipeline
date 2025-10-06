@@ -1,5 +1,6 @@
 # Movie Pipeline
 
+This architecture is constraind by OMDb API key limitation. The free API key allows to send only 1000 requests per day and there is over 6000 movies to enrich so queries need to be spread across multiple days. If the API key had no query limits, Pub/Sub could be used instead to achieve better scalability.
 This project builds a serverless data pipeline for movie box office analysis. It ingests movie revenue CSVs and enriches them with OMDb API data. Then it models the data in BigQuery and powers an interactive Power BI dashboard.
 
 ### Technologies
@@ -120,6 +121,7 @@ Example screenshot:
 - More dimensions such as ```dim_actors```, ```dim_director```, ```dim_language```, ```dim_country``` for deeper analytics.
 - Stream CSV processing for large files (if possible in GCS).
 - Introduce stable IDs for objects in many to many relationships in ```dim_movies``` (for example movies with multiple genres).
+
 
 
 
